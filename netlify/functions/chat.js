@@ -1,3 +1,22 @@
+async function fetchWithRetry(url, options, retries = 3, delay = 1000) {
+  for (let i = 0; i < retries; i++) {
+    const response = await fetch(url, options);
+    
+    // If successful or not a high-demand/rate-limit error, return immediately
+    if (response.ok || (response.status !== 503 && response.status !== 429)) {
+      return response;
+    }
+    
+    // If we have retries left, wait with exponential backoff (1s, then 2s, then 4s)
+    if (i < retries - 1) {
+      await new Promise(resolve => setTimeout(resolve, delay));
+      delay *= 2; 
+    } else {
+      return response;
+    }
+  }
+}
+
 exports.handler = async function(event, context) {
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: JSON.stringify({ error: "Method Not Allowed" }) };
@@ -14,7 +33,8 @@ exports.handler = async function(event, context) {
       };
     }
 
-    const apiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const options = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -23,8 +43,9 @@ exports.handler = async function(event, context) {
         },
         contents: [{ parts: [{ text: message }] }]
       })
-    });
+    };
 
+    const apiResponse = await fetchWithRetry(url, options);
     const data = await apiResponse.json();
 
     if (!apiResponse.ok) {
