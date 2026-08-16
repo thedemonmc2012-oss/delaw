@@ -27,6 +27,13 @@ exports.handler = async function(event, context) {
 
     const data = await apiResponse.json();
 
+    if (!apiResponse.ok) {
+      return {
+        statusCode: apiResponse.status,
+        body: JSON.stringify({ error: data.error?.message || "Google API request failed." })
+      };
+    }
+
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
