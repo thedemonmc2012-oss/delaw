@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DELAW - Connected AI Platform</title>
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #09090e 0%, #171527 100%);
+      --card-bg: rgba(30, 30, 46, 0.6);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --accent-primary: #8b5cf6; 
+      --accent-secondary: #ec4899; 
+      --accent-gradient: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      --accent-glow: 0 4px 20px rgba(139, 92, 246, 0.4);
+      --text-color: #ffffff;
+      --text-muted: #a1a1aa;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-color);
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: absolute;
+      top: -20%; left: -10%; width: 50%; height: 50%;
+      background: radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 60%);
+      z-index: -1;
+    }
+
+    /* Sidebar Navigation */
+    aside {
+      width: 280px;
+      background: rgba(20, 20, 30, 0.4);
+      backdrop-filter: blur(12px);
+      padding: 30px 20px;
+      border-right: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 5px 0 25px rgba(0,0,0,0.2);
+    }
+
+    aside h2 {
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 30px;
+      font-size: 1.4rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-weight: 800;
+    }
+
+    .profile-showcase { display: flex; align-items: center; padding-bottom: 25px; margin-bottom: 25px; border-bottom: 1px solid var(--card-border); }
+    .profile-pic { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; margin-right: 15px; padding: 3px; background: var(--accent-gradient); }
+    .profile-info h3 { font-size: 1.05rem; margin-bottom: 4px; font-weight: 600; }
+    .profile-info p { font-size: 0.85rem; color: var(--accent-secondary); font-weight: 500; }
+
+    aside ul { list-style: none; flex-grow: 1; }
+    aside li { padding: 14px 18px; margin-bottom: 10px; border-radius: 10px; cursor: pointer; color: var(--text-muted); font-weight: 500; transition: all 0.3s ease; border: 1px solid transparent; }
+    aside li:hover { background: rgba(255, 255, 255, 0.05); color: var(--text-color); transform: translateX(5px); }
+    aside li.active { background: var(--accent-gradient); color: #fff; box-shadow: var(--accent-glow); border: 1px solid rgba(255,255,255,0.2); }
+
+    /* Main Content Area */
+    main { flex: 1; padding: 50px; position: relative; display: flex; flex-direction: column; }
+    header { margin-bottom: 30px; }
+    header h1 { font-size: 2.2rem; margin-bottom: 8px; font-weight: 700; }
+
+    .tab-content { display: none; animation: fadeIn 0.4s ease-out; flex-direction: column; flex: 1; }
+    .tab-content.active-tab { display: flex; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Dashboard Cards */
+    .tools-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 40px; }
+    .card { background: var(--card-bg); backdrop-filter: blur(10px); padding: 30px; border-radius: 16px; border: 1px solid var(--card-border); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: pointer; }
+    .card:hover { transform: translateY(-5px); box-shadow: 0 12px 40px rgba(139, 92, 246, 0.2); border-color: rgba(139, 92, 246, 0.3); }
+    .card h3 { font-size: 1.3rem; margin-bottom: 12px; color: #fff; }
+    .card p { color: var(--text-muted); font-size: 0.95em; line-height: 1.5; }
+
+    /* AI Chat Interface */
+    .chat-container { background: var(--card-bg); backdrop-filter: blur(10px); border-radius: 16px; border: 1px solid var(--card-border); display: flex; flex-direction: column; flex: 1; max-height: 600px; overflow: hidden; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); }
+    .chat-messages { flex: 1; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+    .message { max-width: 80%; padding: 14px 18px; border-radius: 14px; font-size: 1rem; line-height: 1.5; word-wrap: break-word; white-space: pre-wrap; }
+    .message.user { background: var(--accent-primary); color: white; align-self: flex-end; border-bottom-right-radius: 4px; box-shadow: 0 4px 15px rgba(139,92,246,0.3); }
+    .message.ai { background: rgba(0, 0, 0, 0.4); color: var(--text-color); align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid var(--card-border); }
+    
+    .chat-input-area { display: flex; padding: 20px; background: rgba(20, 20, 30, 0.6); border-top: 1px solid var(--card-border); gap: 12px; }
+    .chat-input-area input { flex: 1; padding: 14px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0, 0, 0, 0.3); color: var(--text-color); font-size: 1rem; outline: none; transition: 0.3s; }
+    .chat-input-area input:focus { border-color: var(--accent-secondary); background: rgba(0,0,0,0.5); }
+    .chat-input-area button { background: var(--accent-gradient); color: white; border: none; padding: 0 25px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: 0.2s; box-shadow: var(--accent-glow); }
+    .chat-input-area button:hover { transform: translateY(-2px); }
+
+    /* Voice Control Module */
+    .voice-box { background: var(--card-bg); backdrop-filter: blur(10px); padding: 40px; border-radius: 16px; text-align: center; border: 2px dashed rgba(236, 72, 153, 0.5); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); max-width: 700px; }
+    .mic-btn { background: var(--accent-gradient); color: white; border: none; padding: 16px 35px; font-size: 1.1rem; font-weight: 600; border-radius: 50px; cursor: pointer; margin-top: 20px; box-shadow: var(--accent-glow); transition: all 0.3s ease; }
+    .mic-btn:hover { transform: scale(1.05); box-shadow: 0 6px 25px rgba(236, 72, 153, 0.6); }
+    .mic-btn.recording { background: #ef4444; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); animation: pulse-red 1.5s infinite; }
+    @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+    #transcript-output { margin-top: 25px; padding: 18px; background: rgba(0, 0, 0, 0.4); border-radius: 12px; min-height: 80px; color: var(--text-color); font-weight: 500; font-size: 1.05rem; border: 1px solid var(--card-border); text-align: left; }
+
+    /* Settings Form */
+    .settings-card { background: var(--card-bg); backdrop-filter: blur(10px); padding: 35px; border-radius: 16px; border: 1px solid var(--card-border); max-width: 600px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; margin-bottom: 8px; color: var(--text-muted); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+    .form-group input { width: 100%; padding: 14px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0, 0, 0, 0.2); color: var(--text-color); font-size: 1rem; outline: none; transition: border-color 0.3s; }
+    .form-group input:focus { border-color: var(--accent-primary); background: rgba(0, 0, 0, 0.4); }
+    .save-btn { background: var(--accent-gradient); color: white; border: none; padding: 14px 28px; font-size: 1rem; font-weight: 600; border-radius: 10px; cursor: pointer; box-shadow: var(--accent-glow); transition: 0.3s; }
+    .save-btn:hover { transform: translateY(-2px); }
+    #settings-message { margin-top: 15px; color: #34d399; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside>
+    <h2>DELAW</h2>
+    <div class="profile-showcase">
+      <img src="https://ui-avatars.com/api/?name=Alex+Morgan&background=8b5cf6&color=fff" alt="Profile" class="profile-pic" id="sidebar-pic">
+      <div class="profile-info">
+        <h3 id="sidebar-name">Alex Morgan</h3>
+        <p>Admin / Developer</p>
+      </div>
+    </div>
+    <ul>
+      <li class="nav-item active" onclick="switchTab('dashboard', this)">Dashboard</li>
+      <li class="nav-item" onclick="switchTab('chat', this)">AI Chat Studio</li>
+      <li class="nav-item" onclick="switchTab('voice', this)">Voice Control</li>
+      <li class="nav-item" onclick="switchTab('settings', this)">Settings</li>
+    </ul>
+  </aside>
+
+  <!-- Main Workspace -->
+  <main>
+    
+    <!-- DASHBOARD TAB -->
+    <div id="dashboard" class="tab-content active-tab">
+      <header>
+        <h1>DELAW Dashboard</h1>
+        <p style="color: var(--text-muted); font-size: 1.1rem;">Select a category below to explore.</p>
+      </header>
+      
+      <section class="tools-grid">
+        <div class="card" onclick="alert('Opening PC Parts module...')">
+          <h3>PC Parts</h3>
+          <p>Browse, compare, and configure components for your ultimate custom PC build.</p>
+        </div>
+        <div class="card" onclick="alert('Opening Education module...')">
+          <h3>Education</h3>
+          <p>Access learning resources, interactive tutorials, and smart study materials.</p>
+        </div>
+        <div class="card" onclick="alert('Opening Games module...')">
+          <h3>Games</h3>
+          <p>Explore vast gaming libraries, read reviews, and track your achievements.</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- AI CHAT STUDIO TAB -->
+    <div id="chat" class="tab-content">
+      <header>
+        <h1>DELAW AI Chat</h1>
+        <p style="color: var(--text-muted); font-size: 1.1rem;">Chat directly with the live DELAW AI system.</p>
+      </header>
+
+      <div class="chat-container">
+        <div class="chat-messages" id="chat-messages">
+          <div class="message ai">Hello! I am DELAW. How can I help you today?</div>
+        </div>
+        <div class="chat-input-area">
+          <input type="text" id="chat-input" placeholder="Type your message or question...">
+          <button id="chat-send-btn">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- VOICE CONTROL TAB -->
+    <div id="voice" class="tab-content">
+      <header>
+        <h1>Voice Access</h1>
+        <p style="color: var(--text-muted); font-size: 1.1rem;">Speak commands or questions directly to DELAW.</p>
+      </header>
+
+      <section class="voice-box">
+        <h2>Voice Assistant</h2>
+        <p style="color: var(--text-muted); margin-top: 8px;">Try saying "Open settings", "Go to dashboard", or ask any question.</p>
+        <button id="start-mic" class="mic-btn">Start Listening</button>
+        <p style="margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);">Shortcut: Press <kbd style="background:rgba(255,255,255,0.1);padding:3px 6px;border-radius:4px;">Shift</kbd> + <kbd style="background:rgba(255,255,255,0.1);padding:3px 6px;border-radius:4px;">V</kbd></p>
+        <div id="transcript-output">Waiting for your voice command...</div>
+      </section>
+    </div>
+
+    <!-- SETTINGS TAB -->
+    <div id="settings" class="tab-content">
+      <header>
+        <h1>Account Settings</h1>
+        <p style="color: var(--text-muted); font-size: 1.1rem;">Manage your profile and platform preferences.</p>
+      </header>
+      <section class="settings-card">
+        <h2 style="margin-bottom: 15px;">Profile Configuration</h2>
+        <form id="profile-form">
+          <div class="form-group">
+            <label for="username">Full Name</label>
+            <input type="text" id="username" required>
+          </div>
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" required>
+          </div>
+          <button type="submit" class="save-btn">Save Changes</button>
+          <div id="settings-message"></div>
+        </form>
+      </section>
+    </div>
+
+  </main>
+
+  <!-- JavaScript Logic -->
+  <script>
+    // --- LOAD PROFILE DATA ---
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedName = localStorage.getItem('ai_user_name') || 'Alex Morgan';
+      const savedEmail = localStorage.getItem('ai_user_email') || 'alex@example.com';
+      document.getElementById('username').value = savedName;
+      document.getElementById('email').value = savedEmail;
+      document.getElementById('sidebar-name').innerText = savedName;
+      document.getElementById('sidebar-pic').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(savedName)}&background=8b5cf6&color=fff`;
+    });
+
+    // --- SAVE PROFILE DATA ---
+    document.getElementById('profile-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const updatedName = document.getElementById('username').value;
+      const updatedEmail = document.getElementById('email').value;
+      localStorage.setItem('ai_user_name', updatedName);
+      localStorage.setItem('ai_user_email', updatedEmail);
+      document.getElementById('sidebar-name').innerText = updatedName;
+      document.getElementById('sidebar-pic').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(updatedName)}&background=8b5cf6&color=fff`;
+      
+      const msg = document.getElementById('settings-message');
+      msg.innerText = `Settings saved successfully!`;
+      setTimeout(() => { msg.innerText = ''; }, 4000);
+    });
+
+    // --- TAB SWITCHING ---
+    function switchTab(tabId, element) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active-tab'));
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active-tab');
+      if(element) element.classList.add('active');
+    }
+
+    // --- TEXT TO SPEECH ---
+    function speakAI(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); 
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        utterance.pitch = 1.1; 
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    // --- SECURE NETLIFY FUNCTION CONNECTOR ---
+    async function getAIResponse(query) {
+      let q = query.toLowerCase().trim();
+
+      if (q.includes('open setting') || q.includes('settings')) {
+        switchTab('settings', document.querySelectorAll('.nav-item')[3]);
+        return "Opening your settings page right now.";
+      }
+      if (q.includes('dashboard') || q.includes('home')) {
+        switchTab('dashboard', document.querySelectorAll('.nav-item')[0]);
+        return "Taking you back to the main dashboard.";
+      }
+      if (q.includes('chat') || q.includes('chat studio')) {
+        switchTab('chat', document.querySelectorAll('.nav-item')[1]);
+        return "Opening the AI Chat Studio.";
+      }
+
+      try {
+        const response = await fetch('/.netlify/functions/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: query })
+        });
+        const data = await response.json();
+        if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+          return data.candidates[0].content.parts[0].text;
+        } else if (data.error) {
+          return `Error: ${data.error}`;
+        }
+      } catch (err) {
+        console.error("Connection error:", err);
+        return "Network error connecting to DELAW server.";
+      }
+
+      if (q.includes('hello') || q.includes('hi')) {
+        const name = localStorage.getItem('ai_user_name') || 'there';
+        return `Hello ${name}! I'm DELAW. How can I help you today?`;
+      }
+      if (q.includes('time')) {
+        return `The current local time is ${new Date().toLocaleTimeString()}.`;
+      }
+      return "I couldn't process that request right now.";
+    }
+
+    // --- CHAT INTERACTION LOGIC ---
+    const chatMessages = document.getElementById('chat-messages');
+    const chatInput = document.getElementById('chat-input');
+    const chatSendBtn = document.getElementById('chat-send-btn');
+
+    async function handleUserMessage(text) {
+      if (!text.trim()) return;
+
+      const userDiv = document.createElement('div');
+      userDiv.className = 'message user';
+      userDiv.textContent = text;
+      chatMessages.appendChild(userDiv);
+      chatInput.value = '';
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+
+      const aiDiv = document.createElement('div');
+      aiDiv.className = 'message ai';
+      aiDiv.textContent = 'Thinking...';
+      chatMessages.appendChild(aiDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+
+      const aiResponse = await getAIResponse(text);
+      aiDiv.textContent = aiResponse;
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      speakAI(aiResponse);
+    }
+
+    chatSendBtn.addEventListener('click', () => handleUserMessage(chatInput.value));
+    chatInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleUserMessage(chatInput.value);
+    });
+
+    // --- VOICE RECOGNITION INTEGRATION ---
+    const micBtn = document.getElementById('start-mic');
+    const output = document.getElementById('transcript-output');
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      output.innerText = "Speech Recognition API not supported in this browser. Use Chrome or Edge.";
+      micBtn.disabled = true;
+    } else {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.lang = 'en-US';
+
+      micBtn.addEventListener('click', () => {
+        if (micBtn.classList.contains('recording')) recognition.stop();
+        else recognition.start();
+      });
+
+      recognition.onstart = () => {
+        micBtn.textContent = 'Listening...';
+        micBtn.classList.add('recording');
+        output.innerText = "Listening... Speak your command or question.";
+      };
+
+      recognition.onend = () => {
+        micBtn.textContent = 'Start Listening';
+        micBtn.classList.remove('recording');
+      };
+
+      recognition.onresult = async (event) => {
+        const transcript = event.results[0][0].transcript;
+        output.innerHTML = `<strong style="color:var(--text-muted);">You:</strong> ${transcript}<br><br><strong style="color:var(--accent-secondary);">DELAW:</strong> Thinking...`;
+        const reply = await getAIResponse(transcript);
+        output.innerHTML = `<strong style="color:var(--text-muted);">You:</strong> ${transcript}<br><br><strong style="color:var(--accent-secondary);">DELAW:</strong> ${reply}`;
+        speakAI(reply);
+      };
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.shiftKey && e.key.toLowerCase() === 'v') {
+        if (document.activeElement.tagName !== 'INPUT') {
+          e.preventDefault();
+          micBtn.click();
+        }
+      }
+    });
+  </script>
+</body>
+</html>
