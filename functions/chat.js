@@ -1,12 +1,10 @@
 export default {
   async fetch(request, env, ctx) {
-    if (request.method === "OPTIONS") {
-      return new Response(null, {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type",
-        },
+    // Allow visiting the URL directly in the browser (GET request)
+    if (request.method === "GET") {
+      return new Response("DELAW AI Backend is active and running successfully!", {
+        status: 200,
+        headers: { "Content-Type": "text/plain" }
       });
     }
 
