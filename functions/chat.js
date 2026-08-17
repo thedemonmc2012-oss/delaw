@@ -1,17 +1,15 @@
-exports.handler = async function(event, context) {
-  if (event.httpMethod !== "POST") {
-    return { statusCode: 405, body: JSON.stringify({ error: "Method Not Allowed" }) };
-  }
-
+export async function onRequestPost(context) {
   try {
-    const { message } = JSON.parse(event.body);
-    const apiKey = process.env.GEMINI_API_KEY;
+    const { request, env } = context;
+    const body = await request.json();
+    const message = body.message;
+    const apiKey = env.GEMINI_API_KEY; // Access environment variables in Cloudflare
 
     if (!apiKey) {
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ error: "Server API key is not configured in Netlify environment variables." })
-      };
+      return new Response(JSON.stringify({ error: "Server API key is not configured in Cloudflare environment variables." }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" }
+      });
     }
 
     const apiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
@@ -27,15 +25,21 @@ exports.handler = async function(event, context) {
 
     const data = await apiResponse.json();
 
-    return {
-      statusCode: 200,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
-    };
+    if (!apiResponse.ok) {
+      return new Response(JSON.stringify({ error: data.error?.message || "Google API request failed." }), {
+        status: apiResponse.status,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+
+    return new Response(JSON.stringify(data), {
+      status: 200,
+      headers: { "Content-Type": "application/json" }
+    });
   } catch (error) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: error.message })
-    };
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
   }
-};
+}
