@@ -3,7 +3,7 @@ export async function onRequestPost(context) {
     const { request, env } = context;
     const body = await request.json();
     const message = body.message;
-    const apiKey = env.GEMINI_API_KEY; // Access environment variables in Cloudflare
+    const apiKey = env.GEMINI_API_KEY;
 
     if (!apiKey) {
       return new Response(JSON.stringify({ error: "Server API key is not configured in Cloudflare environment variables." }), {
@@ -17,7 +17,9 @@ export async function onRequestPost(context) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         system_instruction: {
-          parts: [{ text: "You are DELAW. Answer the user directly and naturally. CRITICAL RULE: Never start your response by introducing yourself, stating your name, or saying 'Hello! I am DELAW'. Just answer the prompt directly." }]
+          parts: [{ 
+            text: "You are DELAW, an advanced, highly intelligent, and helpful personal AI assistant. Your job is to answer all questions across any topic accurately, cleanly, and naturally. CRITICAL RULE: Never start your response by introducing yourself, stating your name, or saying 'Hello! I am DELAW'. Just answer the user's prompt directly and helpfully." 
+          }]
         },
         contents: [{ parts: [{ text: message }] }]
       })
