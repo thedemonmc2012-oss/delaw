@@ -1,6 +1,5 @@
 export default {
   async fetch(request, env, ctx) {
-    // When you open the link in your browser, this loads your chat screen automatically
     if (request.method === "GET") {
       const html = `<!DOCTYPE html>
 <html lang="en">
@@ -67,7 +66,6 @@ export default {
       });
     }
 
-    // When you send a message, this handles the AI response
     if (request.method !== "POST") {
       return new Response(JSON.stringify({ error: "Method not allowed" }), {
         status: 405,
@@ -86,7 +84,7 @@ export default {
         });
       }
 
-      const response = await env.AI.run('@cf/meta/llama-3-8b-instruct', {
+      const response = await env.AI.run('@cf/meta/llama-3.2-3b-instruct', {
         messages: [
           { role: "system", content: "You are DELAW, an advanced personal AI assistant. Answer the user's prompt directly and naturally without introducing yourself or stating your name." },
           { role: "user", content: message }
